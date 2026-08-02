@@ -7,7 +7,8 @@ C engine, a working demo game to replace, an asset pipeline, and the offline
 tools to see what you are making without booting a console.
 
 Targets a stock console — 4 MiB, no Expansion Pak. The starter game leaves
-about 3 MiB of that free.
+about 3 MiB of that free. It is also set up to be handed straight to a coding
+agent — see [vibe coding it](#vibe-coding-it).
 
 | | | |
 | --- | --- | --- |
@@ -87,6 +88,32 @@ Emulators are for iterating on layout and logic. Hardware is the arbiter.
    import a PNG atlas — see [docs/custom-textures.md](docs/custom-textures.md).
 
 Everything under `engine/` you keep. Everything under `game/` you delete.
+
+## Vibe coding it
+
+This is a good template to point a coding agent at, and deliberately so.
+
+The hard part of N64 development is not the C. It is a handful of rules that
+are invisible in the code and only fail on real hardware — don't interleave
+fills and text, double-buffer anything the RSP reads, multiply by `delta`. An
+agent writing N64 code from general knowledge gets all three wrong, and those
+bugs are the worst kind: fine on an emulator, intermittent on a console, and
+impossible to attribute after the fact.
+
+So they are written down where an agent will actually read them.
+[CLAUDE.md](CLAUDE.md) carries the rules and the workflow; every engine header
+explains why its function is shaped the way it is rather than just what it
+does; and the build runs `check_ram.py`, so a change that would overrun the
+framebuffers fails loudly instead of quietly corrupting memory.
+
+The preview tools matter more here than they first appear. An agent can render
+the sprites, models and legends it just wrote — straight from the source, in a
+quarter of a second, without building a ROM — and then look at the result. That
+closes the loop that is usually missing.
+
+And the `engine/` and `game/` split bounds the blast radius. Point it at
+`game/`, leave `engine/` alone, and the worst case is a demo that needs
+rewriting rather than a runtime that needs debugging.
 
 ## Three things the hardware will teach you the hard way
 
