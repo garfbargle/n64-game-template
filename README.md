@@ -1,5 +1,7 @@
 # N64 Game Template
 
+![Box art for N64-GAME-TEMPLATE: a low-poly figure standing on a neon grid among coloured blocks, styled as a Nintendo 64 game box](docs/art/boxart.jpg)
+
 **A starting point for Nintendo 64 games that runs on real hardware.** A small
 C engine, a working demo game to replace, an asset pipeline, and the offline
 tools to see what you are making without booting a console.
@@ -58,6 +60,20 @@ builds and streams to cart RAM; `./perma-load` writes it to the SD card.
 
 Full setup, deployment and the texture/music/SFX pipelines:
 [docs/building.md](docs/building.md).
+
+<img src="docs/art/cartridge.jpg" alt="The template as a grey Nintendo 64 cartridge with a printed label" width="420" align="right">
+
+That is the point of the flashcart path: the ROM this builds is a real ROM. It
+boots on a real console from a real cartridge, at the real frame rate, with the
+real RDP — which is the only place some of the faults in
+[docs/hardware.md](docs/hardware.md) will ever show themselves.
+
+Emulators are for iterating on layout and logic. Hardware is the arbiter.
+
+<br clear="right">
+
+*Box and cartridge artwork is a mock-up, not a shipping product — see
+[Credits](#credits).*
 
 ## Make it yours
 
@@ -150,3 +166,15 @@ The engine was extracted from Mine64, a finished N64 game — it is the part of
 that game that was not about blocks. That is why the comments in `engine/` are
 as specific as they are: most of them are recording something a real console
 did, usually the hard way.
+
+The box and cartridge images are a fan-made mock-up of what this project would
+look like as a retail release. It is not a retail release, it is not licensed,
+approved, or endorsed by Nintendo, and it has not been rated by the ESRB.
+Nintendo 64, the N64 logo, Controller Pak, Rumble Pak and the Official Nintendo
+Seal are trademarks of Nintendo; the ESRB rating icons are trademarks of the
+Entertainment Software Association. They appear here only as part of that
+period-accurate pastiche.
+
+**If you fork this and publish it, replace that artwork with your own.** Those
+marks are not yours to ship, and the Seal and the rating badge in particular
+assert a certification that never happened.
