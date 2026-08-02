@@ -167,14 +167,10 @@ that game that was not about blocks. That is why the comments in `engine/` are
 as specific as they are: most of them are recording something a real console
 did, usually the hard way.
 
-The box and cartridge images are a fan-made mock-up of what this project would
-look like as a retail release. It is not a retail release, it is not licensed,
-approved, or endorsed by Nintendo, and it has not been rated by the ESRB.
-Nintendo 64, the N64 logo, Controller Pak, Rumble Pak and the Official Nintendo
-Seal are trademarks of Nintendo; the ESRB rating icons are trademarks of the
-Entertainment Software Association. They appear here only as part of that
-period-accurate pastiche.
-
-**If you fork this and publish it, replace that artwork with your own.** Those
-marks are not yours to ship, and the Seal and the rating badge in particular
-assert a certification that never happened.
+The box and cartridge images are a fan-made mock-up, for fun, of what this
+project would look like as a retail release. It is not a retail release, it is
+not licensed, approved, or endorsed by Nintendo, and it has not been rated by
+the ESRB. Nintendo 64, the N64 logo, Controller Pak, Rumble Pak and the
+Official Nintendo Seal are trademarks of Nintendo; the ESRB rating icons are
+trademarks of the Entertainment Software Association. They appear here only as
+part of that period-accurate pastiche.
