@@ -7,6 +7,14 @@ tools to see what you are making without booting a console.
 Targets a stock console — 4 MiB, no Expansion Pak. The starter game leaves
 about 3 MiB of that free.
 
+| | | |
+| --- | --- | --- |
+| ![Title screen with three save slots and a control legend](docs/shots/title.png) | ![A textured crate turning over a tiled ground plane, with hearts and a control legend](docs/shots/play.png) | ![The pause card: music and sound volume as rows of check marks](docs/shots/pause.png) |
+
+*The starter game, straight out of the box. Everything above is drawn by the
+~600 lines in `game/` — the title card, the scene, the HUD and the pause menu —
+using engine pieces you keep.*
+
 ## What you get
 
 **An engine** (`engine/`) — boot, video and the frame loop; a font and text
@@ -14,6 +22,14 @@ drawing; controller-button sprites, legends, check marks and meters; input with
 edge detection and a stick that behaves; flashcart saving with transactional
 writes; streamed music and sound effects; and a freeze watchdog that makes a
 locked-up console say what killed it.
+
+![Every controller button drawn as a pixel sprite: A, B, START, the four C buttons, L, R, Z, the analog stick and the D-pad](docs/shots/buttons.png)
+
+Every control the console has, as a sprite, so a screen can name a button by
+drawing it instead of spelling it out. They cost a dozen fill rectangles each —
+no texture load — and they compose into legend rows that measure themselves:
+
+![A legend row reading: stick LOOK, L and R ZOOM, B SAVE, START PAUSE](docs/shots/legend.png)
 
 **A game** (`game/`) — a title screen with save slots, a textured crate turning
 over a ground plane, a HUD and a pause menu. About 600 lines, all of it meant to
@@ -84,17 +100,30 @@ tools/preview/buttons.py --legend --crt
 
 That one reads the sprite tables straight out of `engine/src/ui.c` and the
 legend out of `game/src/hud.c`, so the picture is what the ROM draws rather
-than a drawing of what it should be. `--crt` fakes composite video, which is
-the cheap way to find out whether a one-pixel outline survives a television.
+than a drawing of what it should be — both button images above were made this
+way, without building a ROM.
 
-`tools/emu` drives mupen64plus through a scripted controller timeline for
-repeatable screenshots:
+`--crt` fakes composite video: full-bandwidth luma, chroma smeared sideways.
+It is the cheap way to find out whether a one-pixel outline survives a
+television, which is the part emulators flatter most.
+
+![The same legend row through a simulated composite signal, with colours bleeding sideways into each other](docs/shots/legend-crt.png)
+
+Same row, same data, through the fake signal. The dark outline holds and the
+letters stay legible — that is what it is there to tell you.
+
+`tools/emu` drives mupen64plus through a scripted controller timeline —
+button presses and stick positions counted in rendered frames — so a run needs
+no keyboard, no window focus, and lands on the same screens every time:
 
 ```sh
 tools/emu/run.sh tools/emu/scripts/tour.txt
 ```
 
-Neither settles performance or RDP behaviour. Those belong on hardware.
+That is where the three screenshots at the top came from, one labelled PNG per
+`shot` in the script. Nine seconds, unattended, repeatable.
+
+Neither tool settles performance or RDP behaviour. Those belong on hardware.
 
 ## Docs
 

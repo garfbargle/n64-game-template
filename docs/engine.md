@@ -177,6 +177,12 @@ so that is the common case, not the edge case. `storageStatusText()` gives a
 short line for a title screen, and distinguishes a missing cart from an exFAT
 card — on hardware, that distinction is the whole diagnosis.
 
+![The starter game on an emulator, reporting NO SAVE DEVICE over the scene after a save attempt](shots/saved.png)
+
+The starter game pressing save on an emulator with no flashcart: it says so and
+carries on. A game that assumed the write succeeded would have lost nothing
+here and everything on a console with a full card.
+
 Writes are transactional: a temporary file, synced, then a rotate and a rename.
 Power lost at any point leaves either the old save or the new one, never half
 of either. Deleting renames rather than erases, so undo survives a power cycle.
