@@ -1,0 +1,4 @@
+# Host-side tooling only; the ROM build needs none of this.
+# tools/preview rasterises on this machine and uses both.
+numpy>=1.26
+pillow>=10.2

@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+# Build the game in the project SDK container and save it to SummerCart64's SD card.
+set -euo pipefail
+
+PROJECT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+BUILD_IMAGE="${N64GAME_BUILD_IMAGE:-n64game-nusys-build:local}"
+DOCKER_PLATFORM="${N64GAME_DOCKER_PLATFORM:-linux/amd64}"
+SC64_DEPLOYER="${SC64_DEPLOYER:-$PROJECT_DIR/../N64FlashcartMenu/tools/sc64/sc64deployer}"
+SC64_SD_PATH="${SC64_SD_PATH:-/Games/the game.n64}"
+
+# Music and effects are the point of loading onto real hardware -- emulation
+# does not reproduce the audio path any more than it reproduces the RDP -- so
+# the audio ROM is what this deploys.  N64GAME_AUDIO=0 builds the silent one,
+# which is the right call when bisecting something that has nothing to do with
+# sound and the extra megabyte of upload is just waiting.
+N64GAME_AUDIO="${N64GAME_AUDIO:-1}"
+if [[ "$N64GAME_AUDIO" == "1" ]]; then
+    MAKE_ARGS=(AUDIO=1)
+    ROM_NAME="n64game-audio.n64"
+    SYMBOL_NAME="n64game-audio.out"
+else
+    # Spelled out rather than left empty: macOS ships bash 3.2, where an empty
+    # array expansion counts as unset under `set -u`.  AUDIO=0 is the Makefile
+    # default, so this is the same build.
+    MAKE_ARGS=(AUDIO=0)
+    ROM_NAME="n64game.n64"
+    SYMBOL_NAME="n64game.out"
+fi
+
+if ! command -v docker >/dev/null; then
+    echo "Docker is required to build the game." >&2
+    exit 1
+fi
+
+if [[ ! -x "$SC64_DEPLOYER" ]]; then
+    echo "SummerCart64 deployer was not found: $SC64_DEPLOYER" >&2
+    echo "Set SC64_DEPLOYER to its full path and retry." >&2
+    exit 1
+fi
+
+echo "Checking the SummerCart64 SD card..."
+require_sd_access() {
+    SC64_INFO="$("$SC64_DEPLOYER" info)"
+    if ! grep -Fq "SD card status:    Initialized" <<<"$SC64_INFO"; then
+        echo "The SummerCart64 SD card is not initialized." >&2
+        printf '%s\n' "$SC64_INFO" >&2
+        exit 1
+    fi
+
+    if ! grep -Fq "Current CIC step:  Power off" <<<"$SC64_INFO"; then
+        echo "The N64 is still using the SummerCart64 SD card." >&2
+        echo "Turn the N64 off, wait for it to power down, then run ./perma-load again." >&2
+        exit 1
+    fi
+}
+
+require_sd_access
+
+echo "Building the game (${ROM_NAME})..."
+docker run --rm --platform "$DOCKER_PLATFORM" \
+    -v "$PROJECT_DIR:/work" -w /work \
+    "$BUILD_IMAGE" make "${MAKE_ARGS[@]}" -j2
+
+# The console may have been powered on while the ROM was building, so check
+# immediately before claiming the SD card for the USB upload.
+require_sd_access
+
+echo "Saving build/$ROM_NAME to $SC64_SD_PATH..."
+"$SC64_DEPLOYER" sd upload "$PROJECT_DIR/build/$ROM_NAME" "$SC64_SD_PATH"
+"$SC64_DEPLOYER" sd stat "$SC64_SD_PATH"
+
+# Symbols matching exactly this deployed ROM, for resolving the addresses in
+# a freeze post-mortem (n64game/freeze.txt).  See tools/resolve_freeze.sh.
+cp "$PROJECT_DIR/$SYMBOL_NAME" "$PROJECT_DIR/build/n64game-deployed.out"
+echo "Symbols archived to build/n64game-deployed.out"
+
+cat <<EOF
+
+Saved successfully. Turn the N64 on to boot the SummerCart64 SD menu, then
+select $SC64_SD_PATH.
+EOF

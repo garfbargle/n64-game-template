@@ -1,0 +1,29 @@
+/.vscode
+/build
+.DS_Store
+__pycache__/
+
+# Generated at build time by generate_assets.py.  The encoded audio payloads
+# under assets/audio are versioned instead -- they are ROM inputs, and the WAV
+# masters they came from are not in the tree.
+/assets/*
+!/assets/audio/
+!/assets/audio/**
+!/assets/game_sfx.h
+!/assets/music_game_vadpcm.h
+!/assets/music_title_vadpcm.h
+/assets/audio/sfx/*.wav
+/assets/audio/**/*.o
+
+# Linked ELFs, left beside the ROM by the deploy scripts.
+/*.out
+
+# Shell scripts are ignored by default so a scratch script cannot be committed
+# by accident; the ones the project actually ships are listed back in.
+*.sh
+!toolchain/
+!toolchain/spicy-ld.sh
+!tools/resolve_freeze.sh
+!tools/emu/build.sh
+!tools/emu/run.sh
+/tools/emu/*.dylib

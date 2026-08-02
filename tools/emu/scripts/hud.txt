@@ -1,0 +1,17 @@
+# Straight into gameplay and hold there, for judging the HUD on its own.
+#
+# The shortest useful script: no menus, no transitions, just the frame the
+# player spends all their time looking at.
+
+wait 120
+press A 8
+wait 120
+shot hud
+
+# Swing the camera round, so the HUD is judged over a moving background rather
+# than over whichever frame it happened to start on.
+stick 80 0 60
+wait 60
+shot hud-turned
+
+stop

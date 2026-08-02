@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+# Build the game in the project SDK container and load it into SummerCart64 RAM.
+set -euo pipefail
+
+PROJECT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+BUILD_IMAGE="${N64GAME_BUILD_IMAGE:-n64game-nusys-build:local}"
+DOCKER_PLATFORM="${N64GAME_DOCKER_PLATFORM:-linux/amd64}"
+SC64_DEPLOYER="${SC64_DEPLOYER:-$PROJECT_DIR/../N64FlashcartMenu/tools/sc64/sc64deployer}"
+
+# Music and effects are the point of loading onto real hardware -- emulation
+# does not reproduce the audio path any more than it reproduces the RDP -- so
+# the audio ROM is what this deploys.  N64GAME_AUDIO=0 builds the silent one,
+# which is the right call when bisecting something that has nothing to do with
+# sound and the extra megabyte of upload is just waiting.
+N64GAME_AUDIO="${N64GAME_AUDIO:-1}"
+if [[ "$N64GAME_AUDIO" == "1" ]]; then
+    MAKE_ARGS=(AUDIO=1)
+    ROM_NAME="n64game-audio.n64"
+    SYMBOL_NAME="n64game-audio.out"
+else
+    # Spelled out rather than left empty: macOS ships bash 3.2, where an empty
+    # array expansion counts as unset under `set -u`.  AUDIO=0 is the Makefile
+    # default, so this is the same build.
+    MAKE_ARGS=(AUDIO=0)
+    ROM_NAME="n64game.n64"
+    SYMBOL_NAME="n64game.out"
+fi
+
+if ! command -v docker >/dev/null; then
+    echo "Docker is required to build the game." >&2
+    exit 1
+fi
+
+if [[ ! -x "$SC64_DEPLOYER" ]]; then
+    echo "SummerCart64 deployer was not found: $SC64_DEPLOYER" >&2
+    echo "Set SC64_DEPLOYER to its full path and retry." >&2
+    exit 1
+fi
+
+echo "Building the game (${ROM_NAME})..."
+docker run --rm --platform "$DOCKER_PLATFORM" \
+    -v "$PROJECT_DIR:/work" -w /work \
+    "$BUILD_IMAGE" make "${MAKE_ARGS[@]}" -j2
+
+echo "Live-loading build/$ROM_NAME to SummerCart64 RAM..."
+"$SC64_DEPLOYER" upload "$PROJECT_DIR/build/$ROM_NAME"
+"$SC64_DEPLOYER" info | grep -F "Boot mode:"
+
+# Archive the symbols matching exactly this deployed ROM.  A frozen console
+# writes n64game/freeze.txt with raw PC/RA addresses; tools/resolve_freeze.sh
+# resolves them against this file.  Without the archive, the next rebuild
+# shifts every symbol and the post-mortem becomes unreadable.
+cp "$PROJECT_DIR/$SYMBOL_NAME" "$PROJECT_DIR/build/n64game-deployed.out"
+echo "Symbols archived to build/n64game-deployed.out"
+

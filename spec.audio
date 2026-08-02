@@ -1,0 +1,61 @@
+#include <nusys.h>
+
+beginseg
+	name	"program"
+	flags	BOOT OBJECT
+	entry 	nuBoot
+	address NU_SPEC_BOOT_ADDR
+	stack   NU_SPEC_BOOT_STACK
+
+	include "build/audio-codesegment.o"
+	include "$(ROOT)/usr/lib/PR/rspboot.o"
+	include "$(ROOT)/usr/lib/PR/aspMain.o"
+	include "$(ROOT)/usr/lib/PR/gspF3DEX2.fifo.o"
+endseg
+
+beginseg
+	name "musicTitle"
+	flags RAW
+	include "assets/audio/music-title.vadpcm.bin"
+endseg
+
+beginseg
+	name "musicGame"
+	flags RAW
+	include "assets/audio/music-game.vadpcm.bin"
+endseg
+
+beginseg
+	name "sfxChime"
+	flags RAW
+	include "assets/audio/sfx/chime.pcm.bin"
+endseg
+
+beginseg
+	name "sfxThump"
+	flags RAW
+	include "assets/audio/sfx/thump.pcm.bin"
+endseg
+
+beginseg
+	name "sfxImpact"
+	flags RAW
+	include "assets/audio/sfx/impact.pcm.bin"
+endseg
+
+beginseg
+	name "sfxClick"
+	flags RAW
+	include "assets/audio/sfx/click.pcm.bin"
+endseg
+
+beginwave
+	name	GAME_WAVE_NAME
+	include	"program"
+	include	"musicTitle"
+	include	"musicGame"
+	include	"sfxChime"
+	include	"sfxThump"
+	include	"sfxImpact"
+	include	"sfxClick"
+endwave

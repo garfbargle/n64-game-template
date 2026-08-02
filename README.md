@@ -1,0 +1,123 @@
+# N64 Game Template
+
+**A starting point for Nintendo 64 games that runs on real hardware.** A small
+C engine, a working demo game to replace, an asset pipeline, and the offline
+tools to see what you are making without booting a console.
+
+Targets a stock console — 4 MiB, no Expansion Pak. The starter game leaves
+about 3 MiB of that free.
+
+## What you get
+
+**An engine** (`engine/`) — boot, video and the frame loop; a font and text
+drawing; controller-button sprites, legends, check marks and meters; input with
+edge detection and a stick that behaves; flashcart saving with transactional
+writes; streamed music and sound effects; and a freeze watchdog that makes a
+locked-up console say what killed it.
+
+**A game** (`game/`) — a title screen with save slots, a textured crate turning
+over a ground plane, a HUD and a pause menu. About 600 lines, all of it meant to
+be deleted once you have read it.
+
+**Tools** — a software rasteriser that draws your models on your machine in a
+quarter of a second, a sprite previewer that reads the engine's own tables, and
+a scripted emulator harness for repeatable screenshots.
+
+## Build it
+
+Build the SDK image once:
+
+```sh
+docker build --platform linux/amd64 -t n64-nusys-build:local -f docker/N64SDK.Dockerfile .
+```
+
+Then the ROM:
+
+```sh
+docker run --rm --platform linux/amd64 -v "$PWD:/work" -w /work n64-nusys-build:local make -j4
+```
+
+Output is `build/n64game.n64`. With a SummerCart64 attached, `./live-load`
+builds and streams to cart RAM; `./perma-load` writes it to the SD card.
+
+Full setup, deployment and the texture/music/SFX pipelines:
+[docs/building.md](docs/building.md).
+
+## Make it yours
+
+1. **Name it.** `NAME` and `STORAGE_DIR` in the [Makefile](Makefile), and
+   `GAME_TITLE` in [game/include/game.h](game/include/game.h).
+2. **Read [game/src/game.c](game/src/game.c).** It is the whole contract with
+   the engine: `gameInit`, `gameUpdate`, `gameDraw`.
+3. **Replace [game/src/scene.c](game/src/scene.c)** with your own geometry, and
+   [game/src/hud.c](game/src/hud.c) with your own screens.
+4. **Draw your own tiles** in [generate_assets.py](generate_assets.py), or
+   import a PNG atlas — see [docs/custom-textures.md](docs/custom-textures.md).
+
+Everything under `engine/` you keep. Everything under `game/` you delete.
+
+## Three things the hardware will teach you the hard way
+
+**Multiply by `delta`.** `gameUpdate` runs on every video retrace; `gameDraw`
+runs only when the RSP is idle. On a heavy scene that is 60 updates and 20
+frames a second. Anything advanced by a fixed amount per call speeds up when
+the scene gets simpler.
+
+**Never interleave fills and text.** Reconfiguring the RDP between fill mode
+and texture mode mid-screen is a hazard that locks real consoles and does
+nothing at all on emulators. Draw every rectangle, then every glyph. This is
+why a legend is two calls.
+
+**Double-buffer anything the RSP reads.** The task drawing the previous frame
+may still be walking a matrix you are about to overwrite. Index it on `dl_no`.
+
+The rest is in [docs/engine.md](docs/engine.md).
+
+## Tools
+
+`tools/preview` draws the game's own data on your machine — no console, no
+emulator, about a quarter of a second:
+
+```sh
+tools/preview/buttons.py --legend --crt
+```
+
+That one reads the sprite tables straight out of `engine/src/ui.c` and the
+legend out of `game/src/hud.c`, so the picture is what the ROM draws rather
+than a drawing of what it should be. `--crt` fakes composite video, which is
+the cheap way to find out whether a one-pixel outline survives a television.
+
+`tools/emu` drives mupen64plus through a scripted controller timeline for
+repeatable screenshots:
+
+```sh
+tools/emu/run.sh tools/emu/scripts/tour.txt
+```
+
+Neither settles performance or RDP behaviour. Those belong on hardware.
+
+## Docs
+
+| | |
+| --- | --- |
+| [Engine](docs/engine.md) | The API, and the hardware rules behind its shape |
+| [Building](docs/building.md) | SDK, ROM builds, flashcart deployment, asset pipelines |
+| [Hardware notes](docs/hardware.md) | Freeze diagnostics and faults emulators don't reproduce |
+| [RAM budget](docs/ram-budget.md) | Where the console's memory goes |
+| [Offline preview](docs/offline-preview.md) | `tools/preview` reference |
+| [Emulator screenshots](docs/emulator-screenshots.md) | `tools/emu` script grammar |
+| [Custom textures](docs/custom-textures.md) | Art-to-cartridge workflow |
+
+## Credits
+
+Cartridge file access via devwizard's
+[libcart](https://github.com/devwizard64/libcart); the `engine/src/ff` and
+`engine/include/ff` directories come from that project. The toolchain is
+assembled from the public
+[ModernN64SDKArchives](https://github.com/ModernN64SDKArchives/n64sdkmod)
+archive.
+
+The engine was extracted from Mine64, a finished N64 game — it is the part of
+that game that was not about blocks. That is why the comments in `engine/` are
+as specific as they are: most of them are recording something a real console
+did, usually the hard way.

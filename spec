@@ -1,0 +1,18 @@
+#include <nusys.h>
+
+beginseg
+	name	"program"
+	flags	BOOT OBJECT
+	entry 	nuBoot
+	address NU_SPEC_BOOT_ADDR
+    stack   NU_SPEC_BOOT_STACK
+
+	include "build/codesegment.o"
+	include "$(ROOT)/usr/lib/PR/rspboot.o"
+	include "$(ROOT)/usr/lib/PR/gspF3DEX2.fifo.o"
+endseg
+
+beginwave
+	name	GAME_WAVE_NAME
+	include	"program"
+endwave

@@ -1,0 +1,34 @@
+# A tour of every screen the starter game reaches, one shot each.
+#
+# Durations count rendered frames, not wall clock: a heavy scene draws fewer of
+# them per second, so a wait means "this many pictures", which is the unit that
+# makes a capture reproducible.
+#
+# See docs/emulator-screenshots.md for the full grammar.
+
+wait 120
+shot title              # slot picker, legend, storage status
+
+press DDOWN 6
+wait 30
+shot title-slot-two     # the cursor moved; check the highlight reads
+
+press A 8
+wait 90
+shot play               # crate over the pedestal, HUD legend, hearts
+
+press START 8
+wait 60
+shot pause              # options card, volume pips, check marks
+
+press CLEFT 6
+wait 30
+shot pause-quieter      # one pip fewer, to check the on/dim states differ
+
+press B 8
+wait 60
+press B 8
+wait 90
+shot saved              # the save confirmation line
+
+stop
